@@ -4,6 +4,8 @@ pipeline{
     environment {
       DOCKER_TAG = getVersion()
      // DOCKER_CRED= credentials('docker_hub_DSO')
+      DOCKER_USERNAME= credentials('docker_hub_DSO').usename
+       DOCKER_PASSWORD= credentials('docker_hub_DSO').password
     }
 
     stages{
@@ -20,6 +22,19 @@ pipeline{
                 sh 'tar czf Bundle.tar.gz web'
             }
         }
+
+ // stage('Docker Login') {
+ //            steps {
+ //                script {
+ //                    // SSH into remote instance and execute DAST scan
+ //                    sshagent(['sonar-cube-server']) {
+ //                        sh '''
+ //                        ssh -o StrictHostKeyChecking=no ec2-user@172.31.25.142 " docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD"
+ //                        '''
+ //                    }
+ //                }
+ //            }
+ //        }
         
             stage('Build and push Image') {
                 steps {
