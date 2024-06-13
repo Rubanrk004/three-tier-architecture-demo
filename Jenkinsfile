@@ -96,7 +96,7 @@ pipeline{
                     // SSH into remote instance and execute DAST scan
                     sshagent(['worker1_node']) {
                         sh '''
-                        ssh -o StrictHostKeyChecking=no ec2-user@172.31.25.142 " sudo helm install robot-shop -n robot-shop "
+                        ssh -o StrictHostKeyChecking=no ec2-user@172.31.25.142 " sudo helm install robot-shop -n robot-shop ."
                         '''
                     }
                 }
