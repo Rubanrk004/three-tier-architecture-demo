@@ -39,6 +39,7 @@ pipeline{
                                         tar -xf Bundle.tar.gz; 
                                         cd web;
                                         docker build . -t ameerbatcha/kubernetes:${DOCKER_TAG}
+                                        docker login -u ameerbatcha -p ${DOCKER_CRED}
                                         docker push ameerbatcha/kubernetes:${DOCKER_TAG}
                                         """,
                         execTimeout: 2000000,
