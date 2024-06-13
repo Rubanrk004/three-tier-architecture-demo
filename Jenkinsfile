@@ -90,7 +90,18 @@ pipeline{
             }
             }
           
-
+        stage('Kubernetes Deployment') {
+            steps {
+                script {
+                    // SSH into remote instance and execute DAST scan
+                    sshagent(['worker1_node']) {
+                        sh '''
+                        ssh -o StrictHostKeyChecking=no ec2-user@172.31.25.142 " sudo kubectl create -f deployment.yaml && sudo kubectl create -f service.yaml "
+                        '''
+                    }
+                }
+            }
+        }
         // stage('Kubenetes Deployment') {
         //     steps {
         //         script {
