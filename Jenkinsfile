@@ -4,8 +4,8 @@ pipeline{
     environment {
       DOCKER_TAG = getVersion()
      // DOCKER_CRED= credentials('docker_hub_DSO')
-      DOCKER_USERNAME= credentials('docker_hub_DSO').usename
-       DOCKER_PASSWORD= credentials('docker_hub_DSO').password
+      // DOCKER_USERNAME= credentials('docker_hub_DSO').usename
+      //  DOCKER_PASSWORD= credentials('docker_hub_DSO').password
     }
 
     stages{
