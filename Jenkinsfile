@@ -65,7 +65,7 @@ pipeline{
                         remoteDirectory: '//opt//docker',
                         remoteDirectorySDF: false,
                         removePrefix: '',
-                        sourceFiles: '**/*.gz'
+                        sourceFiles: '*.gz'
                     )
                 ],
                 usePromotionTimestamp: false,
