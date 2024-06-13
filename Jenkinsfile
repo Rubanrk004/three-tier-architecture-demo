@@ -35,14 +35,13 @@ pipeline{
                         cleanRemote: false,
                         excludes: '',
                         execCommand: """
-                                        sudo su - ;
                                         cd /opt/docker; 
                                         tar -xf Bundle.tar.gz; 
                                         cd web;
                                         docker build . -t ameerbatcha/kubernetes:${DOCKER_TAG}
                                         docker push ameerbatcha/kubernetes:${DOCKER_TAG}
                                         """,
-                        execTimeout: 200000000,
+                        execTimeout: 2000000,
                         flatten: false,
                         makeEmptyDirs: false,
                         noDefaultExcludes: false,
