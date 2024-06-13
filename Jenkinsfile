@@ -3,7 +3,7 @@ pipeline{
   
     environment {
       DOCKER_TAG = getVersion()
-      DOCKER_CRED= credentials('docker_hub_DSO')
+     // DOCKER_CRED= credentials('docker_hub_DSO')
     }
 
     stages{
@@ -23,9 +23,9 @@ pipeline{
         
             stage('Build and push Image') {
                 steps {
-                    
+                    script {
                     sh "echo ${DOCKER_TAG}"
-                    
+                    withCredentials([usernamePassword(credentialsId: 'docker_hub_DSO', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]){
                     // Add your Docker build and push steps here
                             sshPublisher(publishers: [
             sshPublisherDesc(
@@ -39,7 +39,7 @@ pipeline{
                                         tar -xf Bundle.tar.gz; 
                                         cd web;
                                         docker build . -t ameerbatcha/kubernetes:${DOCKER_TAG};
-                                        docker login -u ameerbatcha -p ${DOCKER_CRED};
+                                        docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD};
                                         docker push ameerbatcha/kubernetes:${DOCKER_TAG}
                                         """,
                         execTimeout: 2000000,
@@ -58,7 +58,8 @@ pipeline{
                 verbose: true
             )
         ])
-                 
+
+                    }
                 //   script {
                    
                 //     if (currentBuild.resultIsBetterOrEqualTo('SUCCESS')) {
@@ -70,7 +71,7 @@ pipeline{
                 //     }
                 // }
 
-
+                    }
             }
             }
           
