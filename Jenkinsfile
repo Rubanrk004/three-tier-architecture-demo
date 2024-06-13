@@ -40,7 +40,7 @@ pipeline{
                                         cd web;
                                         docker build . -t ameerbatcha/kubernetes:${DOCKER_TAG};
                                         docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD};
-                                        docker push ameerbatcha/kubernetes:${DOCKER_TAG}
+                                        docker push ameerbatcha/kubernetes:${DOCKER_TAG};
                                         """,
                         execTimeout: 2000000,
                         flatten: false,
