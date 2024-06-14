@@ -7,6 +7,7 @@ pipeline{
       // DOCKER_USERNAME= credentials('docker_hub_DSO').usename
       //  DOCKER_PASSWORD= credentials('docker_hub_DSO').password
     }
+       parameters {         string(name: 'version', defaultValue: 'latest', description: 'A parameter for the pipeline')     }
 
     stages{
         stage('SCM'){
@@ -52,10 +53,10 @@ pipeline{
                         execCommand: """
                                         cd /opt/docker; 
                                         tar -xf Bundle.tar.gz mysql; 
-                                        cd web;
-                                        docker build . -t ameerbatcha/kubernetes:${DOCKER_TAG}
+                                        cd mysql;
+                                        docker build . -t ameerbatcha/kubernetes:mysql
                                         docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
-                                        docker push ameerbatcha/kubernetes:${DOCKER_TAG}
+                                        docker push ameerbatcha/kubernetes:mysql
                                         """,
                         execTimeout: 2000000,
                         flatten: false,
