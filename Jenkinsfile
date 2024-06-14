@@ -19,7 +19,7 @@ pipeline{
           stage('Bundling') {
             steps {
 
-                sh 'tar czf Bundle.tar.gz web'
+                sh 'tar czf Bundle.tar.gz mysql'
             }
         }
 
@@ -51,7 +51,7 @@ pipeline{
                         excludes: '',
                         execCommand: """
                                         cd /opt/docker; 
-                                        tar -xf Bundle.tar.gz web; 
+                                        tar -xf Bundle.tar.gz mysql; 
                                         cd web;
                                         docker build . -t ameerbatcha/kubernetes:${DOCKER_TAG}
                                         docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
