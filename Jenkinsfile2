@@ -1,0 +1,86 @@
+pipeline {
+    agent any 
+  
+    environment {
+      DOCKER_TAG = getVersion()
+    }
+
+    parameters {
+        choice(
+            name: 'SERVICE_NAME',
+            choices: ['catalogue', 'user', 'cart', 'shipping', 'ratings', 'payment', 'dispatch','mongo','mysql','web', 'ALL'],
+            description: 'Select the service to deploy'
+        )
+    }
+    stages {
+
+        stage('SCM'){
+            steps{
+                 deleteDir()
+                git 'https://github.com/Ameerbatcha/three-tier-architecture-demo.git'
+            }
+        }
+
+          stage('Bundling') {
+            steps {
+
+                sh 'tar czf Bundle.tar.gz .'
+            }
+        }
+
+        stage('Build and push Image') {
+            steps {
+                script {
+                    sh "echo ${DOCKER_TAG}"
+                    withCredentials([usernamePassword(credentialsId: 'docker_hub_DSO', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        def services = []
+                        if (params.SERVICE_NAME == 'ALL') {
+                            services = ['cart','catalogue','dispatch','mongo','mysql','payment','user','shipping','ratings','web']
+                        } else {
+                            services = [params.SERVICE_NAME]
+                        }
+
+                        for (String svc : services) {
+                            sshPublisher(publishers: [
+                                sshPublisherDesc(
+                                    configName: 'worker1',
+                                    transfers: [
+                                        sshTransfer(
+                                            cleanRemote: false,
+                                            excludes: '',
+                                            execCommand: """
+                                                cd /opt/docker; 
+                                                tar -xf Bundle.tar.gz ${svc}; 
+                                                cd ${svc};
+                                                docker build . -t securityanddevops/${svc}:${BUILD_NUMBER}-${DOCKER_TAG}
+                                                docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+                                                docker push securityanddevops/${svc}:${BUILD_NUMBER}-${DOCKER_TAG}
+                                            """,
+                                            execTimeout: 2000000,
+                                            flatten: false,
+                                            makeEmptyDirs: false,
+                                            noDefaultExcludes: false,
+                                            patternSeparator: '[, ]+$',
+                                            remoteDirectory: '//opt//docker',
+                                            remoteDirectorySDF: false,
+                                            removePrefix: '',
+                                            sourceFiles: '*.gz'
+                                        )
+                                    ],
+                                    usePromotionTimestamp: false,
+                                    useWorkspaceInPromotion: false,
+                                    verbose: true
+                                )
+                            ])
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    def getVersion(){
+         def commitHash = sh label: '', returnStdout: true, script: 'git rev-parse --short HEAD'
+    return commitHash
+}
+}
