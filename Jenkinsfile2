@@ -24,7 +24,7 @@ pipeline {
           stage('Bundling') {
             steps {
 
-                sh 'tar czf Bundle.tar.gz .'
+                sh 'tar czf Bundle.tar.gz *'
             }
         }
 
