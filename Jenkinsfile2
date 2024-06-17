@@ -58,7 +58,6 @@ pipeline {
                                                 docker tag securityanddevops/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG} securityanddevops/rs-${svc}:latest
                                                 docker push securityanddevops/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG}
                                                 docker rmi securityanddevops/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG}
-                                                docker rmi securityanddevops/rs-${svc}:latest
                                             """,
                                             execTimeout: 2000000,
                                             flatten: false,
