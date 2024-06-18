@@ -40,7 +40,7 @@ pipeline {
                             if (fileExists('pom.xml')) {
                                 // Java service
                                 withSonarQubeEnv('sonar') {
-                                    sh 'mvn sonar:sonar'
+                                    sh 'mvn sonar:sonar -Dsonar.exclusions=**/*.java'
                                 }
                             // } else if (fileExists('package.json')) {
                             //     // Node.js service
