@@ -20,6 +20,14 @@ pipeline {
                 git 'https://github.com/Ameerbatcha/three-tier-architecture-demo.git'
             }
         }
+      stage ('SAST') {
+      steps {
+        withSonarQubeEnv('sonar') {
+          sh 'mvn sonar:sonar'
+          sh 'cat target/sonar/report-task.txt'
+        }
+      }
+    }
 
           stage('Bundling') {
             steps {
