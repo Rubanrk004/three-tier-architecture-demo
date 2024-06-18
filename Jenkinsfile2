@@ -3,6 +3,7 @@ pipeline {
 
         tools {
       maven 'maven'
+      nodejs 'nodejs'
     }
 
     environment {
@@ -24,46 +25,46 @@ pipeline {
                 git 'https://github.com/Ameerbatcha/three-tier-architecture-demo.git'
             }
         }
-//stage('SAST') {
-        //     steps {
-        //         script {
-        //             def services = []
-        //             if (params.SERVICE_NAME == 'ALL') {
-        //                 services = ['catalogue', 'user', 'cart', 'shipping', 'ratings', 'payment', 'dispatch', 'mongo', 'mysql', 'web']
-        //             } else {
-        //                 services = [params.SERVICE_NAME]
-        //             }
+stage('SAST') {
+            steps {
+                script {
+                    def services = []
+                    if (params.SERVICE_NAME == 'ALL') {
+                        services = ['catalogue', 'user', 'cart', 'shipping', 'ratings', 'payment', 'dispatch', 'mongo', 'mysql', 'web']
+                    } else {
+                        services = [params.SERVICE_NAME]
+                    }
 
-        //             for (String svc : services) {
-        //                 dir("${svc}") {
-        //                     if (fileExists('pom.xml')) {
-        //                         // Java service
-        //                         withSonarQubeEnv('sonar') {
-        //                             sh 'mvn sonar:sonar'
-        //                         }
-        //                     } else if (fileExists('package.json')) {
-        //                         // Node.js service
-        //                         withSonarQubeEnv('sonar') {
-        //                             sh 'npm install'
-        //                             sh 'npm run lint'
-        //                             sh 'npx sonar-scanner'
-        //                         }
-        //                     } else if (fileExists('requirements.txt')) {
-        //                         // Python service
-        //                         sh 'pip install -r requirements.txt'
-        //                         sh 'bandit -r .'
-        //                     } else if (fileExists('go.mod')) {
-        //                         // Go service
-        //                         sh 'go get -u github.com/securego/gosec/v2/cmd/gosec'
-        //                         sh 'gosec ./...'
-        //                     } else {
-        //                         echo "No known project type found for ${svc}"
-        //                     }
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+                    for (String svc : services) {
+                        dir("${svc}") {
+                            if (fileExists('pom.xml')) {
+                                // Java service
+                                withSonarQubeEnv('sonar') {
+                                    sh 'mvn sonar:sonar'
+                                }
+                            } else if (fileExists('package.json')) {
+                                // Node.js service
+                                withSonarQubeEnv('sonar') {
+                                    sh 'npm install'
+                                    sh 'npm run lint'
+                                    sh 'npx sonar-scanner'
+                                }
+                            } else if (fileExists('requirements.txt')) {
+                                // Python service
+                                sh 'pip install -r requirements.txt'
+                                sh 'bandit -r .'
+                            } else if (fileExists('go.mod')) {
+                                // Go service
+                                sh 'go get -u github.com/securego/gosec/v2/cmd/gosec'
+                                sh 'gosec ./...'
+                            } else {
+                                echo "No known project type found for ${svc}"
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
 
           stage('Bundling') {
