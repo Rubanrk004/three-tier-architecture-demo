@@ -41,7 +41,8 @@ pipeline {
                             if (fileExists('pom.xml')) {
                                 // Java service
                                 withSonarQubeEnv('sonar') {
-                                    sh 'mvn sonar:sonar -Dsonar.exclusions=**/*.java'
+                                    sh 'mvn sonar:sonar '
+                                   //  sh 'mvn sonar:sonar -Dsonar.exclusions=**/*.java'
                                 }
                             // } else if (fileExists('package.json')) {
                             //     // Node.js service
@@ -50,10 +51,10 @@ pipeline {
                             //         sh 'npm run lint'
                             //         sh 'npx sonar-scanner'
                             //     }
-                            } else if (fileExists('requirements.txt')) {
+                          //  } else if (fileExists('requirements.txt')) {
                                 // Python service
-                                sh 'pip install -r requirements.txt'
-                                sh 'bandit -r .'
+                             //   sh 'pip install -r requirements.txt'
+                             //   sh 'bandit -r .'
                             }else {
                                 echo "No known project type found for ${svc}"
                             }
