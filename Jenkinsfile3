@@ -48,10 +48,12 @@ pipeline {
                             //         sh 'npm run lint'
                             //         sh 'npx sonar-scanner'
                             //     }
-                          //  } else if (fileExists('requirements.txt')) {
-                                // Python service
-                             //   sh 'pip install -r requirements.txt'
-                             //   sh 'bandit -r .'
+                           } else if (fileExists('requirements.txt')) {
+                               'withSonarQubeEnv('sonar') {
+                                    sh 'pip install -r requirements.txt'
+                                    sh 'pylint $(find . -type f -name "*.py")'
+                                    sh 'sonar-scanner'
+                                }
                             }else {
                                 echo "No known project type found for ${svc}"
                             }
