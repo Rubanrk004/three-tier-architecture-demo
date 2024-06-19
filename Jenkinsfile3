@@ -53,7 +53,6 @@ pipeline {
                                 sh 'pip install -r requirements.txt'
                                 sh 'pip install pylint'  // Ensure pylint is installed
                                 withSonarQubeEnv('sonar') {
-                                    sh 'pylint $(find . -type f -name "*.py")'
                                     writeFile file: 'sonar-project.properties', text: """
                                     sonar.projectKey=${svc}
                                     sonar.sources=.
