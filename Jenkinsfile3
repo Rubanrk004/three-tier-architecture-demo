@@ -36,6 +36,7 @@ pipeline {
                         dir("${svc}") {
                             if (fileExists('pom.xml')) {
                                 // Java service
+                                sh 'mvn clean compile'
                                 withSonarQubeEnv('sonar') {
                                     sh 'mvn sonar:sonar '
                                    //  sh 'mvn sonar:sonar -Dsonar.exclusions=**/*.java'
