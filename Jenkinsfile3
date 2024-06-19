@@ -49,7 +49,7 @@ pipeline {
                             //         sh 'npx sonar-scanner'
                             //     }
                            } else if (fileExists('requirements.txt')) {
-                               'withSonarQubeEnv('sonar') {
+                               withSonarQubeEnv('sonar') {
                                     sh 'pip install -r requirements.txt'
                                     sh 'pylint $(find . -type f -name "*.py")'
                                     sh 'sonar-scanner'
