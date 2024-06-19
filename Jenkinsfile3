@@ -1,0 +1,49 @@
+pipeline {
+    agent any 
+
+        tools {
+      maven 'maven'
+      nodejs 'nodejs'
+    }
+
+    environment {
+      DOCKER_TAG = getVersion()
+    }
+
+    parameters {
+        choice(
+            name: 'SERVICE_NAME',
+            choices: ['catalogue', 'user', 'cart', 'shipping', 'ratings', 'payment', 'dispatch','mongo','mysql','web', 'ALL'],
+            description: 'Select the service to deploy'
+        )
+    }
+    stages {
+
+        stage('SCM'){
+            steps{
+                 deleteDir()
+                git 'https://github.com/Ameerbatcha/three-tier-architecture-demo.git'
+            }
+        }
+stage('SAST') {
+            steps {
+                script {
+                    def services = []
+                    if (params.SERVICE_NAME == 'ALL') {
+                        services = ['catalogue', 'user', 'cart', 'shipping', 'ratings', 'payment', 'dispatch', 'mongo', 'mysql', 'web']
+                    } else {
+                        services = [params.SERVICE_NAME]
+                    }
+
+                    for (String svc : services) {
+                        dir("${svc}") {
+                            withSonarQubeEnv('sonar') {
+                                sh "${env.SONAR_SCANNER_HOME}/bin/sonar-scanner"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
