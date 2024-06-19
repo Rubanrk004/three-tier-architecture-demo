@@ -26,7 +26,7 @@ pipeline {
                 git 'https://github.com/Ameerbatcha/three-tier-architecture-demo.git'
             }
         }
-stage('SAST') {
+        stage('SAST') {
             steps {
                 script {
                     def services = []
@@ -38,8 +38,24 @@ stage('SAST') {
 
                     for (String svc : services) {
                         dir("${svc}") {
-                            withSonarQubeEnv('sonar') {
-                                sh "${env.SONAR_SCANNER_HOME}/bin/sonar-scanner"
+                            if (fileExists('pom.xml')) {
+                                // Java service
+                                withSonarQubeEnv('sonar') {
+                                    sh 'mvn sonar:sonar -Dsonar.exclusions=**/*.java'
+                                }
+                            // } else if (fileExists('package.json')) {
+                            //     // Node.js service
+                            //     withSonarQubeEnv('sonar') {
+                            //         sh 'npm install'
+                            //         sh 'npm run lint'
+                            //         sh 'npx sonar-scanner'
+                            //     }
+                            } else if (fileExists('requirements.txt')) {
+                                // Python service
+                                sh 'pip install -r requirements.txt'
+                                sh 'bandit -r .'
+                            }else {
+                                echo "No known project type found for ${svc}"
                             }
                         }
                     }
