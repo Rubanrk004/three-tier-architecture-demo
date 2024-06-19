@@ -52,6 +52,7 @@ pipeline {
                                 // Python service
                                 sh 'pip install -r requirements.txt'
                                 sh 'pip install pylint'  // Ensure pylint is installed
+                                sh 'echo 'export PATH=/usr/local/bin/sonar-scanner-6.0.0.4432-linux/bin/:$PATH' >> ~/.bashrc'
                                 withSonarQubeEnv('sonar') {
                                     writeFile file: 'sonar-project.properties', text: """
                                     sonar.projectKey=${svc}
