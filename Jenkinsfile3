@@ -62,7 +62,6 @@ pipeline {
                                     sonar.python.pylint.reportPaths=pylint-report.txt
                                     """
                                     sh 'pylint $(find . -type f -name "*.py") > pylint-report.txt || true'
-                                    sh 'sudo su -'
                                     sh 'sonar-scanner'
                                 }
                             }else {
