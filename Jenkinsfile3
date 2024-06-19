@@ -6,10 +6,6 @@ pipeline {
       nodejs 'nodejs'
     }
 
-    environment {
-      DOCKER_TAG = getVersion()
-      SONAR_SCANNER_HOME = tool 'SonarQube Scanner'
-    }
 
     parameters {
         choice(
