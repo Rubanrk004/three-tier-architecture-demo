@@ -54,6 +54,12 @@ pipeline {
                                 sh 'pip install pylint'  // Ensure pylint is installed
                                 withSonarQubeEnv('sonar') {
                                     sh 'pylint $(find . -type f -name "*.py")'
+                                    writeFile file: 'sonar-project.properties', text: """
+                                    sonar.projectKey=${svc}
+                                    sonar.sources=.
+                                    sonar.python.pylint.reportPaths=pylint-report.txt
+                                    """
+                                    sh 'pylint $(find . -type f -name "*.py") > pylint-report.txt || true'
                                     sh 'sonar-scanner'
                                 }
                             }else {
