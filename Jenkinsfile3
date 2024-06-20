@@ -57,7 +57,7 @@ pipeline {
                                                     npm run lint
                                                     export SONAR_SCANNER_HOME=/path/to/sonar-scanner
                                                     export PATH=\$SONAR_SCANNER_HOME/bin:\$PATH
-                                                    sonar-scanner -Dsonar.projectKey=${svc}
+                                                    sonar-scanner 
                                                 """,
                                             )
                                         ],
