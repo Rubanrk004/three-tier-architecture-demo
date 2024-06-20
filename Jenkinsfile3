@@ -58,6 +58,7 @@ pipeline {
                                                 execCommand: """
                                                     cd /opt/docker/${svc}
                                                     npm install
+                                                    npm install eslint
                                                     npm run lint || echo "Lint script not found, skipping lint"
                                                     echo 'sonar.projectKey=${svc}' > sonar-scanner.properties
                                                     echo 'sonar.sources=.' >> sonar-scanner.properties
