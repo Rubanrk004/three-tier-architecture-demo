@@ -41,28 +41,46 @@ pipeline {
                                     sh 'mvn sonar:sonar '
                                    //  sh 'mvn sonar:sonar -Dsonar.exclusions=**/*.java'
                                 }
-                            // } else if (fileExists('package.json')) {
-                            //     // Node.js service
-                            //     withSonarQubeEnv('sonar') {
-                            //         sh 'npm install'
-                            //         sh 'npm run lint'
-                            //         sh 'npx sonar-scanner'
-                            //     }
-                          } else if (fileExists('requirements.txt')) {
-                                // Python service
-                                sh 'pip install -r requirements.txt'
-                                sh 'pip install pylint'  // Ensure pylint is installed
+                            } else if (fileExists('package.json')) {
+                        // Node.js service
+                        // Copy files to the remote server
+                        sshPublisher(publishers: [
+                            sshPublisherDesc(
+                                configName: 'worker1',
+                                transfers: [
+                                    sshTransfer(
+                                        sourceFiles: '**/*',
+                                        removePrefix: '',
+                                        remoteDirectory: "/opt/${svc}",
+                                        execCommand: """
+                                            cd /opt/${svc}
+                                            npm install
+                                            npm run lint
+                                            export SONAR_SCANNER_HOME=/path/to/sonar-scanner
+                                            export PATH=\$SONAR_SCANNER_HOME/bin:\$PATH
+                                            sonar-scanner -Dsonar.projectKey=${svc}
+                                        """,
+                                    )
+                                ],
+                                usePromotionTimestamp: false,
+                                verbose: true
+                            )
+                        ])
+                        //   } else if (fileExists('requirements.txt')) {
+                        //         // Python service
+                        //         sh 'pip install -r requirements.txt'
+                        //         sh 'pip install pylint'  // Ensure pylint is installed
                                 
-                                withSonarQubeEnv('sonar') {
-                                    writeFile file: 'sonar-project.properties', text: """
-                                    sonar.projectKey=${svc}
-                                    sonar.sources=.
-                                    sonar.python.pylint.reportPaths=pylint-report.txt
-                                    """
-                                    sh 'pylint $(find . -type f -name "*.py") > pylint-report.txt || true'
-                                    withEnv(["PATH+EXTRA=/usr/local/bin/sonar-scanner-6.0.0.4432-linux/bin"]) {
-                                        sh 'sonar-scanner'
-                                    }
+                        //         withSonarQubeEnv('sonar') {
+                        //             writeFile file: 'sonar-project.properties', text: """
+                        //             sonar.projectKey=${svc}
+                        //             sonar.sources=.
+                        //             sonar.python.pylint.reportPaths=pylint-report.txt
+                        //             """
+                        //             sh 'pylint $(find . -type f -name "*.py") > pylint-report.txt || true'
+                        //             withEnv(["PATH+EXTRA=/usr/local/bin/sonar-scanner-6.0.0.4432-linux/bin"]) {
+                        //                 sh 'sonar-scanner'
+                        //             }
                                 }
                             } else {
                                 echo "No known project type found for ${svc}"
