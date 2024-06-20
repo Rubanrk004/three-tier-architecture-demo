@@ -1,13 +1,9 @@
 pipeline {
-    agent any 
+    agent any
 
-        tools {
-      maven 'maven'
-      nodejs 'nodejs'
-    }
-
-    environment {
-      DOCKER_TAG = getVersion()
+    tools {
+        maven 'maven'
+        nodejs 'nodejs'
     }
 
     parameters {
@@ -17,14 +13,19 @@ pipeline {
             description: 'Select the service to deploy'
         )
     }
-    stages {
+    environment {
 
-        stage('SCM'){
-            steps{
-                 deleteDir()
+        SONAR_TOKEN = credentials('sonarqube-auth')
+    }
+
+    stages {
+        stage('SCM') {
+            steps {
+                deleteDir()
                 git 'https://github.com/Ameerbatcha/three-tier-architecture-demo.git'
             }
         }
+
         stage('SAST') {
             steps {
                 script {
@@ -39,24 +40,51 @@ pipeline {
                         dir("${svc}") {
                             if (fileExists('pom.xml')) {
                                 // Java service
+                                sh 'mvn clean compile'
                                 withSonarQubeEnv('sonar') {
-                                    sh 'mvn sonar:sonar -Dsonar.exclusions=**/*.java'
+                                    sh 'mvn sonar:sonar'
                                 }
-                            // } else if (fileExists('package.json')) {
-                            //     // Node.js service
-                            //     withSonarQubeEnv('sonar') {
-                            //         sh 'npm install'
-                            //         sh 'npm run lint'
-                            //         sh 'npx sonar-scanner'
-                            //     }
-                            } else if (fileExists('requirements.txt')) {
-                                // Python service
-                                sh 'pip install -r requirements.txt'
-                                sh 'bandit -r .'
-                            } else if (fileExists('go.mod')) {
-                                // Go service
-                                sh 'go get -u github.com/securego/gosec/v2/cmd/gosec'
-                                sh 'gosec ./...'
+                            } else if (fileExists('package.json')) {
+                                // Node.js service
+                                // Copy files to the remote server
+                                sshPublisher(publishers: [
+                                    sshPublisherDesc(
+                                        configName: 'worker1',
+                                        transfers: [
+                                            sshTransfer(
+                                                sourceFiles: '**/*',
+                                                removePrefix: '',
+                                                remoteDirectory: "/opt/docker/${svc}",
+                                                execCommand: """
+                                                    cd /opt/docker/${svc}
+                                                    npm install
+                                                    echo 'sonar.projectKey=${svc}' > sonar-scanner.properties
+                                                    echo 'sonar.sources=.' >> sonar-scanner.properties
+                                                    echo 'sonar.host.url=http://3.109.5.158:9000' >> sonar-scanner.properties
+                                                    echo 'sonar.login=${SONAR_TOKEN}' >> sonar-scanner.properties
+                                                    sonar-scanner -Dsonar.projectKey=${svc} -Dsonar.login=${SONAR_TOKEN} -Dproject.settings=sonar-scanner.properties
+                                                """,
+                                            )
+                                        ],
+                                        usePromotionTimestamp: false,
+                                        verbose: true
+                                    )
+                                ])
+                              } else if (fileExists('requirements.txt')) {
+                            // Python service
+                            sh 'pip install -r requirements.txt'
+                            sh 'pip install pylint'  // Ensure pylint is installed
+                            
+                            withSonarQubeEnv('sonar') {
+                                writeFile file: 'sonar-project.properties', text: """
+                                sonar.projectKey=${svc}
+                                sonar.sources=.
+                                sonar.python.pylint.reportPaths=pylint-report.txt
+                                """
+                                sh 'pylint $(find . -type f -name "*.py") > pylint-report.txt || true'
+                                withEnv(["PATH+EXTRA=/usr/local/bin/sonar-scanner-6.0.0.4432-linux/bin"]) {
+                                    sh 'sonar-scanner'
+                                }
                             } else {
                                 echo "No known project type found for ${svc}"
                             }
@@ -66,9 +94,9 @@ pipeline {
             }
         }
 
+    }
 
-
-          stage('Bundling') {
+  stage('Bundling') {
             steps {
 
                 sh 'tar czf Bundle.tar.gz *'
@@ -124,9 +152,10 @@ pipeline {
                             ])
                         }
                     }
-                }
+              }
             }
         }
+
     }
 }
 
