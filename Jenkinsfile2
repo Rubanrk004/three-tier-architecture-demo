@@ -85,7 +85,8 @@ pipeline {
                                 withEnv(["PATH+EXTRA=/usr/local/bin/sonar-scanner-6.0.0.4432-linux/bin"]) {
                                     sh 'sonar-scanner'
                                 }
-                            } else {
+                            } 
+                            }else {
                                 echo "No known project type found for ${svc}"
                             }
                         }
