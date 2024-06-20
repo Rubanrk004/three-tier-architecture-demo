@@ -13,6 +13,10 @@ pipeline {
             description: 'Select the service to deploy'
         )
     }
+    environment {
+
+        SONAR_TOKEN = crendentials('sonarqube-auth')
+    }
 
     stages {
         stage('SCM') {
@@ -54,10 +58,9 @@ pipeline {
                                                 execCommand: """
                                                     cd /opt/docker/${svc}
                                                     npm install
+                                                    npm run lint || echo "Lint script not found, skipping lint"
                                                     npm run lint
-                                                    export SONAR_SCANNER_HOME=/path/to/sonar-scanner
-                                                    export PATH=\$SONAR_SCANNER_HOME/bin:\$PATH
-                                                    sonar-scanner 
+                                                    sonar-scanner  -Dsonar.projectKey=${svc} -Dsonar.login=SONAR_TOKEN
                                                 """,
                                             )
                                         ],
@@ -65,6 +68,21 @@ pipeline {
                                         verbose: true
                                     )
                                 ])
+                            //   } else if (fileExists('requirements.txt')) {
+                    //         // Python service
+                    //         sh 'pip install -r requirements.txt'
+                    //         sh 'pip install pylint'  // Ensure pylint is installed
+                            
+                    //         withSonarQubeEnv('sonar') {
+                    //             writeFile file: 'sonar-project.properties', text: """
+                    //             sonar.projectKey=${svc}
+                    //             sonar.sources=.
+                    //             sonar.python.pylint.reportPaths=pylint-report.txt
+                    //             """
+                    //             sh 'pylint $(find . -type f -name "*.py") > pylint-report.txt || true'
+                    //             withEnv(["PATH+EXTRA=/usr/local/bin/sonar-scanner-6.0.0.4432-linux/bin"]) {
+                    //                 sh 'sonar-scanner'
+                    //             }
                             } else {
                                 echo "No known project type found for ${svc}"
                             }
