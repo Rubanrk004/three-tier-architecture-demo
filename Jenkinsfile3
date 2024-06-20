@@ -50,9 +50,9 @@ pipeline {
                                             sshTransfer(
                                                 sourceFiles: '**/*',
                                                 removePrefix: '',
-                                                remoteDirectory: "/opt/${svc}",
+                                                remoteDirectory: "/opt/docker/${svc}",
                                                 execCommand: """
-                                                    cd /opt/${svc}
+                                                    cd /opt/docker/${svc}
                                                     npm install
                                                     npm run lint
                                                     export SONAR_SCANNER_HOME=/path/to/sonar-scanner
