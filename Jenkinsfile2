@@ -9,12 +9,12 @@ pipeline {
     parameters {
         choice(
             name: 'SERVICE_NAME',
-            choices: ['catalogue', 'user', 'cart', 'shipping', 'ratings', 'payment', 'dispatch','mongo','mysql','web', 'ALL'],
+            choices: ['catalogue', 'user', 'cart', 'shipping', 'ratings', 'payment', 'dispatch', 'mongo', 'mysql', 'web', 'ALL'],
             description: 'Select the service to deploy'
         )
     }
-    environment {
 
+    environment {
         SONAR_TOKEN = credentials('sonarqube-auth')
     }
 
@@ -63,30 +63,30 @@ pipeline {
                                                     echo 'sonar.host.url=http://3.109.5.158:9000' >> sonar-scanner.properties
                                                     echo 'sonar.login=${SONAR_TOKEN}' >> sonar-scanner.properties
                                                     sonar-scanner -Dsonar.projectKey=${svc} -Dsonar.login=${SONAR_TOKEN} -Dproject.settings=sonar-scanner.properties
-                                                """,
+                                                """
                                             )
                                         ],
                                         usePromotionTimestamp: false,
                                         verbose: true
                                     )
                                 ])
-                              } else if (fileExists('requirements.txt')) {
-                            // Python service
-                            sh 'pip install -r requirements.txt'
-                            sh 'pip install pylint'  // Ensure pylint is installed
-                            
-                            withSonarQubeEnv('sonar') {
-                                writeFile file: 'sonar-project.properties', text: """
-                                sonar.projectKey=${svc}
-                                sonar.sources=.
-                                sonar.python.pylint.reportPaths=pylint-report.txt
-                                """
-                                sh 'pylint $(find . -type f -name "*.py") > pylint-report.txt || true'
-                                withEnv(["PATH+EXTRA=/usr/local/bin/sonar-scanner-6.0.0.4432-linux/bin"]) {
-                                    sh 'sonar-scanner'
+                            } else if (fileExists('requirements.txt')) {
+                                // Python service
+                                sh 'pip install -r requirements.txt'
+                                sh 'pip install pylint'  // Ensure pylint is installed
+
+                                withSonarQubeEnv('sonar') {
+                                    writeFile file: 'sonar-project.properties', text: """
+                                    sonar.projectKey=${svc}
+                                    sonar.sources=.
+                                    sonar.python.pylint.reportPaths=pylint-report.txt
+                                    """
+                                    sh 'pylint $(find . -type f -name "*.py") > pylint-report.txt || true'
+                                    withEnv(["PATH+EXTRA=/usr/local/bin/sonar-scanner-6.0.0.4432-linux/bin"]) {
+                                        sh 'sonar-scanner'
+                                    }
                                 }
-                            } 
-                            }else {
+                            } else {
                                 echo "No known project type found for ${svc}"
                             }
                         }
@@ -95,11 +95,8 @@ pipeline {
             }
         }
 
-    }
-
-  stage('Bundling') {
+        stage('Bundling') {
             steps {
-
                 sh 'tar czf Bundle.tar.gz *'
             }
         }
@@ -111,7 +108,7 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'docker_hub_DSO', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                         def services = []
                         if (params.SERVICE_NAME == 'ALL') {
-                            services = ['cart','catalogue','dispatch','mongo','mysql','payment','user','shipping','ratings','web']
+                            services = ['cart', 'catalogue', 'dispatch', 'mongo', 'mysql', 'payment', 'user', 'shipping', 'ratings', 'web']
                         } else {
                             services = [params.SERVICE_NAME]
                         }
@@ -128,7 +125,7 @@ pipeline {
                                                 cd /opt/docker; 
                                                 tar -xf Bundle.tar.gz ${svc}; 
                                                 cd ${svc};
-                                                docker build . --cache-from securityanddevops/rs-${svc}:latest -t securityanddevops/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG} 
+                                                docker build . --cache-from securityanddevops/rs-${svc}:latest -t securityanddevops/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG}
                                                 trivy image --severity CRITICAL --exit-code 1 securityanddevops/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG}
                                                 docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
                                                 docker tag securityanddevops/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG} securityanddevops/rs-${svc}:latest
@@ -153,14 +150,13 @@ pipeline {
                             ])
                         }
                     }
-              }
+                }
             }
         }
-
     }
 
-
-    def getVersion(){
-         def commitHash = sh label: '', returnStdout: true, script: 'git rev-parse --short HEAD'
-    return commitHash
+    def getVersion() {
+        def commitHash = sh label: '', returnStdout: true, script: 'git rev-parse --short HEAD'
+        return commitHash
+    }
 }
