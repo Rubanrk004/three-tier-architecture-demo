@@ -59,8 +59,7 @@ pipeline {
                                                     cd /opt/docker/${svc}
                                                     npm install
                                                     npm run lint || echo "Lint script not found, skipping lint"
-                                                    npm run lint
-                                                    sonar-scanner  -Dsonar.projectKey=${svc} -Dsonar.login=SONAR_TOKEN
+                                                    sonar-scanner  -Dsonar.projectKey=${svc} -Dsonar.login=${SONAR_TOKEN}
                                                 """,
                                             )
                                         ],
