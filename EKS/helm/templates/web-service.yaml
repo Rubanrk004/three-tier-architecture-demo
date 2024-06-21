@@ -4,6 +4,8 @@ metadata:
   name: web
   labels:
     service: web
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-internal: "0.0.0.0/0"
 spec:
   ports:
   - name: http
