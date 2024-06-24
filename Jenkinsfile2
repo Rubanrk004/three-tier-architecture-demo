@@ -155,6 +155,31 @@ pipeline {
                 }
             }
         }
+    stage('Deploy to Testing') {
+            steps {
+                sshPublisher(publishers: [
+                    sshPublisherDesc(
+                        configName: 'Bootstrap_Server',
+                        transfers: [
+                            sshTransfer(
+                                execCommand: """
+                                    cd /opt/three-tier-architecture-demo-instana
+                                    git pull https://github.com/Thoshinny-cyber/three-tier-architecture-demo-instana.git
+                                    cd EKS/helm
+                                    ./start_script.sh 
+                                """,
+                                execTimeout: 2000000,
+                                removePrefix: '',
+                                remoteDirectory: '',
+                                sourceFiles: ''
+                            )
+                        ],
+                        usePromotionTimestamp: false,
+                        verbose: true
+                    )
+                ])
+            }
+        }
     }
 }
     def getVersion() {
