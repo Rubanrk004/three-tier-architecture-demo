@@ -166,7 +166,8 @@ pipeline {
                                     cd /opt/three-tier-architecture-demo-instana
                                     git pull https://github.com/Thoshinny-cyber/three-tier-architecture-demo-instana.git
                                     cd EKS/helm
-                                    ./start_script.sh 
+                                    ./start_script.sh
+                                     kubectl apply -f ingress.yaml
                                 """,
                                 execTimeout: 2000000,
                                 removePrefix: '',
