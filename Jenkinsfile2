@@ -155,7 +155,7 @@ pipeline {
                 }
             }
         }
-    stage('Deploy to Testing') {
+    stage('Deploy to Testing Namespace') {
             steps {
                 sshPublisher(publishers: [
                     sshPublisherDesc(
