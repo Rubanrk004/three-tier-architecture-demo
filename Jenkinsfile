@@ -168,7 +168,6 @@ pipeline {
                                     git pull https://github.com/Thoshinny-cyber/three-tier-architecture-demo-instana.git
                                     cd EKS/helm
                                     helm install robot-shop --namespace testing .
-                                    sudo su -
                                     kubectl apply -f ingress.yaml
                                 """,
                                 execTimeout: 2000000,
