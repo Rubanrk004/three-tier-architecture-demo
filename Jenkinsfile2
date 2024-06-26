@@ -61,7 +61,7 @@ pipeline {
                                                     npm install
                                                     echo 'sonar.projectKey=${svc}' > sonar-scanner.properties
                                                     echo 'sonar.sources=.' >> sonar-scanner.properties
-                                                    echo 'sonar.host.url=http://13.127.198.30:9000' >> sonar-scanner.properties
+                                                    echo 'sonar.host.url=http://3.110.190.27:9000' >> sonar-scanner.properties
                                                     echo 'sonar.login=${SONAR_TOKEN}' >> sonar-scanner.properties
                                                     sonar-scanner -Dsonar.projectKey=${svc} -Dsonar.login=${SONAR_TOKEN} -Dproject.settings=sonar-scanner.properties
                                                 """
@@ -167,8 +167,8 @@ pipeline {
                                     cd /opt/three-tier-architecture-demo-instana
                                     git pull https://github.com/Thoshinny-cyber/three-tier-architecture-demo-instana.git
                                     cd EKS/helm
-                                    ./start_script.sh
-                                     kubectl apply -f ingress.yaml
+                                    helm install robot-shop --namespace testing .
+                                    kubectl apply -f ingress.yaml
                                 """,
                                 execTimeout: 2000000,
                                 removePrefix: '',
