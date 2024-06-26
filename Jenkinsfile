@@ -165,6 +165,7 @@ pipeline {
                             sshTransfer(
                                 execCommand: """
                                     cd /opt/three-tier-architecture-demo-instana
+                                    git config --global --add safe.directory /opt/three-tier-architecture-demo-instana
                                     git pull https://github.com/Thoshinny-cyber/three-tier-architecture-demo-instana.git
                                     cd EKS/helm
                                     helm install robot-shop --namespace testing .
