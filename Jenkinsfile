@@ -1,226 +1,191 @@
-pipeline{
+pipeline {
     agent any
-  
-    environment {
-      DOCKER_TAG = getVersion()
-     // DOCKER_CRED= credentials('docker_hub_DSO')
-      // DOCKER_USERNAME= credentials('docker_hub_DSO').usename
-      //  DOCKER_PASSWORD= credentials('docker_hub_DSO').password
-    }
-       parameters {         string(name: 'version', defaultValue: 'latest', description: 'A parameter for the pipeline')     }
 
-    stages{
-        stage('SCM'){
-            steps{
-                 deleteDir()
+    tools {
+        maven 'maven'
+        nodejs 'nodejs'
+    }
+
+    parameters {
+        choice(
+            name: 'SERVICE_NAME',
+            choices: ['catalogue', 'user', 'cart', 'shipping', 'ratings', 'payment', 'dispatch', 'mongo', 'mysql', 'web', 'ALL'],
+            description: 'Select the service to deploy'
+        )
+    }
+
+    environment {
+        DOCKER_TAG = getVersion()
+        SONAR_TOKEN = credentials('sonarqube-auth')
+    }
+
+    stages {
+        stage('SCM') {
+            steps {
+                deleteDir()
                 git 'https://github.com/Ameerbatcha/three-tier-architecture-demo.git'
             }
         }
 
-          stage('Bundling') {
-            steps {
-
-                sh 'tar czf Bundle.tar.gz mysql'
-            }
-        }
-
- // stage('Docker Login') {
- //            steps {
- //                script {
- //                    // SSH into remote instance and execute DAST scan
- //                    sshagent(['sonar-cube-server']) {
- //                        sh '''
- //                        ssh -o StrictHostKeyChecking=no ec2-user@172.31.25.142 " docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD"
- //                        '''
- //                    }
- //                }
- //            }
- //        }
-        
-            stage('Build and push Image') {
-                steps {
-                    script {
-                    sh "echo ${DOCKER_TAG}"
-                    withCredentials([usernamePassword(credentialsId: 'docker_hub_DSO', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]){
-                    // Add your Docker build and push steps here
-                            sshPublisher(publishers: [
-            sshPublisherDesc(
-                configName: 'worker1',
-                transfers: [
-                    sshTransfer(
-                        cleanRemote: false,
-                        excludes: '',
-                        execCommand: """
-                                        cd /opt/docker; 
-                                        tar -xf Bundle.tar.gz mysql; 
-                                        cd mysql;
-                                        docker build . -t ameerbatcha/kubernetes:mysql
-                                        docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
-                                        docker push ameerbatcha/kubernetes:mysql
-                                        """,
-                        execTimeout: 2000000,
-                        flatten: false,
-                        makeEmptyDirs: false,
-                        noDefaultExcludes: false,
-                        patternSeparator: '[, ]+$',
-                        remoteDirectory: '//opt//docker',
-                        remoteDirectorySDF: false,
-                        removePrefix: '',
-                        sourceFiles: '*.gz'
-                    )
-                ],
-                usePromotionTimestamp: false,
-                useWorkspaceInPromotion: false,
-                verbose: true
-            )
-        ])
-
-                    }
-                //   script {
-                   
-                //     if (currentBuild.resultIsBetterOrEqualTo('SUCCESS')) {
-                //         // Send success email to manager for approval
-                //         sendApprovalEmail('SUCCESS')
-                //     } else {
-                //         // Send failure email to manager for previous build
-                //         sendFailureEmail('FAILURE')
-                //     }
-                // }
-
-                    }
-            }
-            }
-          
-        stage('Kubernetes Deployment') {
+        stage('SAST') {
             steps {
                 script {
-                    // SSH into remote instance and execute DAST scan
-                    sshagent(['worker1_node']) {
-                        sh '''
-                        ssh -o StrictHostKeyChecking=no ec2-user@172.31.25.142 " sudo helm install robot-shop -n robot-shop ."
-                        '''
+                    def services = []
+                    if (params.SERVICE_NAME == 'ALL') {
+                        services = ['catalogue', 'user', 'cart', 'shipping', 'ratings', 'payment', 'dispatch', 'mongo', 'mysql', 'web']
+                    } else {
+                        services = [params.SERVICE_NAME]
+                    }
+
+                    for (String svc : services) {
+                        dir("${svc}") {
+                            if (fileExists('pom.xml')) {
+                                // Java service
+                                sh 'mvn clean compile'
+                                withSonarQubeEnv('sonar') {
+                                    sh 'mvn sonar:sonar'
+                                }
+                            } else if (fileExists('package.json')) {
+                                // Node.js service
+                                // Copy files to the remote server
+                                sshPublisher(publishers: [
+                                    sshPublisherDesc(
+                                        configName: 'worker1',
+                                        transfers: [
+                                            sshTransfer(
+                                                sourceFiles: '**/*',
+                                                removePrefix: '',
+                                                remoteDirectory: "/opt/docker/${svc}",
+                                                execCommand: """
+                                                    cd /opt/docker/${svc}
+                                                    npm install
+                                                    echo 'sonar.projectKey=${svc}' > sonar-scanner.properties
+                                                    echo 'sonar.sources=.' >> sonar-scanner.properties
+                                                    echo 'sonar.host.url=http://3.110.190.27:9000' >> sonar-scanner.properties
+                                                    echo 'sonar.login=${SONAR_TOKEN}' >> sonar-scanner.properties
+                                                    sonar-scanner -Dsonar.projectKey=${svc} -Dsonar.login=${SONAR_TOKEN} -Dproject.settings=sonar-scanner.properties
+                                                """
+                                            )
+                                        ],
+                                        usePromotionTimestamp: false,
+                                        verbose: true
+                                    )
+                                ])
+                            } else if (fileExists('requirements.txt')) {
+                                // Python service
+                                sh 'pip install -r requirements.txt'
+                                sh 'pip install pylint'  // Ensure pylint is installed
+
+                                withSonarQubeEnv('sonar') {
+                                    writeFile file: 'sonar-project.properties', text: """
+                                    sonar.projectKey=${svc}
+                                    sonar.sources=.
+                                    sonar.python.pylint.reportPaths=pylint-report.txt
+                                    """
+                                    sh 'pylint $(find . -type f -name "*.py") > pylint-report.txt || true'
+                                    withEnv(["PATH+EXTRA=/usr/local/bin/sonar-scanner-6.0.0.4432-linux/bin"]) {
+                                        sh 'sonar-scanner'
+                                    }
+                                }
+                            } else {
+                                echo "No known project type found for ${svc}"
+                            }
+                        }
                     }
                 }
             }
         }
-        // stage('Kubenetes Deployment') {
-        //     steps {
-        //         script {
-        //             def ansiblePlaybookContent = '''
-        //             - hosts: worker2
-        //               become: True
 
- 
+        stage('Bundling') {
+            steps {
+                sh 'tar czf Bundle.tar.gz *'
+            }
+        }
 
-        //               tasks:
-        //                 - name: Install python pip
-        //                   yum:
-        //                     name: python-pip
-        //                     state: present
+        stage('Build and push Image') {
+            steps {
+                script {
+                    sh "echo ${DOCKER_TAG}"
+                    withCredentials([usernamePassword(credentialsId: 'docker_hub_DSO', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        def services = []
+                        if (params.SERVICE_NAME == 'ALL') {
+                            services = ['cart', 'catalogue', 'dispatch', 'mongo', 'mysql', 'payment', 'user', 'shipping', 'ratings', 'web']
+                        } else {
+                            services = [params.SERVICE_NAME]
+                        }
 
- 
-
-        //                 - name: Install docker-py python module
-        //                   pip:
-        //                     name: docker-py
-        //                     state: present
-
- 
-
-        //                 - name: Start the container
-        //                   docker_container:
-        //                     name: nodecontainer
-        //                     image: "thoshinny/angularapp:{{ DOCKER_TAG }}"
-        //                     state: started
-        //                     published_ports:
-        //                       - 0.0.0.0:80:80
-        //             '''
-
- 
-
-        //             writeFile(file: 'inline_playbook.yml', text: ansiblePlaybookContent)
-
- 
-
-        //            def ansibleInventoryContent = '''[dev]
-        //             172.31.42.16 ansible_user=ec2-user
-        //             '''
-
- 
-
-        //             writeFile(file: 'dev.inv', text: ansibleInventoryContent)
-
- 
-
-   
-        //             ansiblePlaybook(
-        //                 inventory: 'dev.inv',
-        //                 playbook: 'inline_playbook.yml',
-        //                 extras: "-e DOCKER_TAG=${DOCKER_TAG}",
-        //                 credentialsId: 'dev-server',
-        //                 installation: 'ansible',
-        //                 disableHostKeyChecking: true,
-        //             )
-
-        //       }
-        //     }
-        // }
-
- 
-
+                        for (String svc : services) {
+                            sshPublisher(publishers: [
+                                sshPublisherDesc(
+                                    configName: 'worker1',
+                                    transfers: [
+                                        sshTransfer(
+                                            cleanRemote: false,
+                                            excludes: '',
+                                            execCommand: """
+                                                cd /opt/docker; 
+                                                tar -xf Bundle.tar.gz ${svc}; 
+                                                cd ${svc};
+                                                docker build . -t securityanddevops/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG}
+                                                // --cache-from securityanddevops/rs-${svc}:latest
+                                                trivy image --severity CRITICAL --exit-code 1 securityanddevops/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG}
+                                                docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+                                                docker tag securityanddevops/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG} securityanddevops/rs-${svc}:latest
+                                                docker push securityanddevops/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG}
+                                                docker push securityanddevops/rs-${svc}:latest
+                                                docker rmi securityanddevops/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG}
+                                            """,
+                                            execTimeout: 2000000,
+                                            flatten: false,
+                                            makeEmptyDirs: false,
+                                            noDefaultExcludes: false,
+                                            patternSeparator: '[, ]+$',
+                                            remoteDirectory: '//opt//docker',
+                                            remoteDirectorySDF: false,
+                                            removePrefix: '',
+                                            sourceFiles: '*.gz'
+                                        )
+                                    ],
+                                    usePromotionTimestamp: false,
+                                    useWorkspaceInPromotion: false,
+                                    verbose: true
+                                )
+                            ])
+                        }
+                    }
+                }
+            }
+        }
+    // stage('Deploy to Testing Namespace') {
+    //         steps {
+    //             sshPublisher(publishers: [
+    //                 sshPublisherDesc(
+    //                     configName: 'Bootstrap_Server',
+    //                     transfers: [
+    //                         sshTransfer(
+    //                             execCommand: """
+    //                                 cd /opt/three-tier-architecture-demo-instana
+    //                                 git pull https://github.com/Thoshinny-cyber/three-tier-architecture-demo-instana.git
+    //                                 cd EKS/helm
+    //                                 helm install robot-shop --namespace testing .
+    //                                 kubectl apply -f ingress.yaml
+    //                             """,
+    //                             execTimeout: 2000000,
+    //                             removePrefix: '',
+    //                             remoteDirectory: '',
+    //                             sourceFiles: ''
+    //                         )
+    //                     ],
+    //                     usePromotionTimestamp: false,
+    //                     verbose: true
+    //                 )
+    //             ])
+    //         }
+    //     }
+    }
 }
-
-}
-
- 
-
- 
-
-def getVersion(){
-    def commitHash = sh label: '', returnStdout: true, script: 'git rev-parse --short HEAD'
-    return commitHash
-}
-
-// def sendApprovalEmail(buildStatus) {
-//     def previousCommit = sh(returnStdout: true, script: 'git rev-parse HEAD~1')
-//     def currentCommit = sh(returnStdout: true, script: 'git rev-parse HEAD')
-//     def changes = sh(script: 'git show --name-status HEAD^', returnStdout: true).trim()
-//     def authorEmail = sh(script: 'git log -1 --format="%ae"', returnStdout: true).trim()
-
-//     def mailSubject = "SUCCESS Notification - Approval Required for Docker Deployment - ${currentBuild.displayName}"
-//     def gitDiffOutput = sh(script: "git diff HEAD~1 ${currentCommit}", returnStdout: true)
-//     if (gitDiffOutput.isEmpty()) {
-//         gitDiffOutput ="No changes found between commits."
-//     }
-//     // Combine 'changes' and 'gitDiffOutput' and write to 'changelog.txt'
-//     def combinedContent = changes + "\n\n" + gitDiffOutput
-//     writeFile(file: 'changelog.txt', text: combinedContent)
-
-
-
-//     def approvalMail = """
-//         Hi Team, <br><br>
-//         The Build <b> ${env.BUILD_NUMBER} of ${env.JOB_NAME} has completed the docker build and need approval for deployment. </b> <br><br>
-//          Commit ID: <b> ${env.GIT_COMMIT} </b> <br><br>
-//          Previous Commit ID:  <b> ${previousCommit} </b> <br><br>
-//          Docker tag:  <b> ${env.DOCKER_TAG} </b> <br><br>
-//          Source Path:  <b> ${env.WORKSPACE} </b> <br><br>
-//          Author:  <b> ${authorEmail} </b> <br><br>
-//          Date:<b> ${env.BUILD_TIMESTAMP} </b> <br><br>
-//          Build Result: <b> ${buildStatus} </b> <br><br>
-//         Please review and approve or reject the deployment.
-//     """
-
-//     emailext (
-//         subject: mailSubject,
-//         body: approvalMail,
-//         mimeType: 'text/html',
-//         to: 'thoshaws04@gmail.com',
-//         attachmentsPattern: 'changelog.txt'
-//     )
-//   timeout(time: 2, unit: 'MINUTES') {
-//                   input message: 'Waiting for Manager Approval'                }
-// }
-
-
+    def getVersion() {
+        def commitHash = sh label: '', returnStdout: true, script: 'git rev-parse --short HEAD'
+        return commitHash
+    }
 
