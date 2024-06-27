@@ -183,6 +183,95 @@ pipeline {
                 ])
             }
         }
+         stage('Wait for Pods to be Ready') {
+            steps {
+                sshPublisher(publishers: [
+                    sshPublisherDesc(
+                        configName: 'Bootstrap_Server',
+                        transfers: [
+                            sshTransfer(
+                                execCommand: """
+                                    timeout=180
+                                    interval=30
+                                    elapsed=0
+                                    while [[ \$elapsed -lt \$timeout ]]; do
+                                        if kubectl get pods -n testing --field-selector=status.phase=Running | grep -q 'Running'; then
+                                            echo "Pods are ready"
+                                            exit 0
+                                        fi
+                                        sleep \$interval
+                                        elapsed=\$((elapsed + interval))
+                                    done
+                                    echo "Pods did not become ready in time"
+                                    exit 1
+                                """,
+                                execTimeout: 2000000,
+                                removePrefix: '',
+                                remoteDirectory: '',
+                                sourceFiles: ''
+                            )
+                        ],
+                        usePromotionTimestamp: false,
+                        verbose: true
+                    )
+                ])
+            }
+        }
+
+        stage('Run Automation Tests') {
+            steps {
+                sshPublisher(publishers: [
+                    sshPublisherDesc(
+                        configName: 'worker1',
+                        transfers: [
+                            sshTransfer(
+                                execCommand: """
+                                    cd /opt/tests
+                                    ./run-tests.sh
+                                """,
+                                execTimeout: 2000000,
+                                removePrefix: '',
+                                remoteDirectory: '',
+                                sourceFiles: ''
+                            )
+                        ],
+                        usePromotionTimestamp: false,
+                        verbose: true
+                    )
+                ])
+            }
+        }
+
+        stage('Deploy to UAT Namespace') {
+            when {
+                expression {
+                    return currentBuild.result == null || currentBuild.result == 'SUCCESS'
+                }
+            }
+            steps {
+                sshPublisher(publishers: [
+                    sshPublisherDesc(
+                        configName: 'Bootstrap_Server',
+                        transfers: [
+                            sshTransfer(
+                                execCommand: """
+                                    cd /opt/three-tier-architecture-demo-instana
+                                    cd EKS/helm
+                                    helm install robot-shop --namespace uat .
+                                    kubectl apply -f ingress.yaml
+                                """,
+                                execTimeout: 2000000,
+                                removePrefix: '',
+                                remoteDirectory: '',
+                                sourceFiles: ''
+                            )
+                        ],
+                        usePromotionTimestamp: false,
+                        verbose: true
+                    )
+                ])
+            }
+        }
     }
 }
     def getVersion() {
