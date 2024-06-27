@@ -227,7 +227,7 @@ pipeline {
                             sshTransfer(
                                 execCommand: """
                                     cd /opt/tests
-                                    ./run-tests.sh
+                                    ./run_tests.sh
                                 """,
                                 execTimeout: 2000000,
                                 removePrefix: '',
