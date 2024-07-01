@@ -61,7 +61,7 @@ pipeline {
                                                     npm install
                                                     echo 'sonar.projectKey=${svc}' > sonar-scanner.properties
                                                     echo 'sonar.sources=.' >> sonar-scanner.properties
-                                                    echo 'sonar.host.url=http://3.111.171.177:9000' >> sonar-scanner.properties
+                                                    echo 'sonar.host.url=http://65.2.34.111:9000' >> sonar-scanner.properties
                                                     echo 'sonar.login=${SONAR_TOKEN}' >> sonar-scanner.properties
                                                     sonar-scanner -Dsonar.projectKey=${svc} -Dsonar.login=${SONAR_TOKEN} -Dproject.settings=sonar-scanner.properties
                                                 """
