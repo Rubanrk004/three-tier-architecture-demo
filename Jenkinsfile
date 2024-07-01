@@ -258,7 +258,7 @@ pipeline {
                                     cd /opt/three-tier-architecture-demo-instana
                                     cd EKS/helm
                                     helm install robot-shop --namespace uat .
-                                    kubectl apply -f ingress.yaml
+                                    kubectl apply -f ingress.yaml --namespace=uat
                                 """,
                                 execTimeout: 2000000,
                                 removePrefix: '',
