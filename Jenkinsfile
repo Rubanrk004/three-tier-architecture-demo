@@ -170,7 +170,11 @@ pipeline {
                                     git pull https://github.com/Thoshinny-cyber/three-tier-architecture-demo-instana.git
                                     cd EKS/helm
                                     helm --upgarde install robot-shop --namespace testing .
-                                    kubectl apply -f ingress-testing.yaml
+                                    if kubectl get ingress ingress-testing -n testing --no-headers; then
+                                      echo "Ingress ingress-testing already exists. Skipping ingress deployment."
+                                    else
+                                      kubectl apply -f ingress-testing.yaml
+                                    fi
                                 """,
                                 execTimeout: 2000000,
                                 removePrefix: '',
@@ -259,7 +263,11 @@ pipeline {
                                     cd /opt/three-tier-architecture-demo-instana
                                     cd EKS/helm
                                     helm --upgrade install robot-shop --namespace uat .
-                                    kubectl apply -f ingress-uat.yaml 
+                                    if kubectl get ingress ingress-uat -n uat --no-headers; then
+                                      echo "Ingress ingress-uat already exists. Skipping ingress deployment."
+                                    else
+                                      kubectl apply -f ingress-uat.yaml
+                                    fi 
                                 """,
                                 execTimeout: 2000000,
                                 removePrefix: '',
