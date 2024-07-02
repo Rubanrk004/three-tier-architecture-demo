@@ -130,8 +130,8 @@ pipeline {
                                                 docker build . -t securityanddevops/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG}
                                                 trivy image --severity CRITICAL --exit-code 1 securityanddevops/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG}
                                                 docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
-                                                docker tag securityanddevops/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG} \
-                                                securityanddevops/rs-${svc}:latest
+                                                docker tag securityanddevops/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG} \\
+securityanddevops/rs-${svc}:latest
                                                 docker push securityanddevops/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG}
                                                 docker push securityanddevops/rs-${svc}:latest
                                                 docker rmi securityanddevops/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG}
