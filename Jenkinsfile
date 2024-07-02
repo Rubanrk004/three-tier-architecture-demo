@@ -127,13 +127,13 @@ pipeline {
                                                 cd /opt/docker;
                                                 tar -xf Bundle.tar.gz ${svc};
                                                 cd ${svc};
-                                                docker build . -t securityanddevops/rs-${svc}:${BUILD_NUMBER}
-                                                trivy image --severity CRITICAL --exit-code 1 securityanddevops/rs-${svc}:${BUILD_NUMBER}
+                                                docker build . -t securityanddevops/rs-${svc}:${DOCKER_TAG}
+                                                trivy image --severity CRITICAL --exit-code 1 securityanddevops/rs-${svc}:${DOCKER_TAG}
                                                 docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
-                                                docker tag securityanddevops/rs-${svc}:${BUILD_NUMBER} securityanddevops/rs-${svc}:latest
-                                                docker push securityanddevops/rs-${svc}:${BUILD_NUMBER}
+                                                docker tag securityanddevops/rs-${svc}:${DOCKER_TAG} securityanddevops/rs-${svc}:latest
+                                                docker push securityanddevops/rs-${svc}:${DOCKER_TAG}
                                                 docker push securityanddevops/rs-${svc}:latest
-                                                docker rmi securityanddevops/rs-${svc}:${BUILD_NUMBER}
+                                                docker rmi securityanddevops/rs-${svc}:${DOCKER_TAG}
                                             """,
                                             execTimeout: 2000000,
                                             flatten: false,
