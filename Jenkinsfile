@@ -170,7 +170,7 @@ pipeline {
                                     git stash
                                     git pull -f https://github.com/Thoshinny-cyber/three-tier-architecture-demo-instana.git
                                     cd EKS/helm
-                                    helm --upgrade install robot-shop --namespace testing .
+                                    helm upgrade --install robot-shop --namespace testing .
                                     if kubectl get ingress ingress-testing -n testing --no-headers; then
                                       echo "Ingress ingress-testing already exists. Skipping ingress deployment."
                                     else
@@ -263,7 +263,7 @@ pipeline {
                                 execCommand: """
                                     cd /opt/three-tier-architecture-demo-instana
                                     cd EKS/helm
-                                    helm --upgrade install robot-shop --namespace uat .
+                                    helm upgrade --install robot-shop --namespace uat .
                                     if kubectl get ingress ingress-uat -n uat --no-headers; then
                                       echo "Ingress ingress-uat already exists. Skipping ingress deployment."
                                     else
