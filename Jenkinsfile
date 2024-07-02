@@ -167,6 +167,7 @@ pipeline {
                                 execCommand: """
                                     cd /opt/three-tier-architecture-demo-instana
                                     git config --global --add safe.directory /opt/three-tier-architecture-demo-instana
+                                    git stash
                                     git pull -f https://github.com/Thoshinny-cyber/three-tier-architecture-demo-instana.git
                                     cd EKS/helm
                                     helm --upgrade install robot-shop --namespace testing .
