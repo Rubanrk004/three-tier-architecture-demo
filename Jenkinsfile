@@ -61,7 +61,8 @@ pipeline {
                                                     npm install
                                                     echo 'sonar.projectKey=${svc}' > sonar-scanner.properties
                                                     echo 'sonar.sources=.' >> sonar-scanner.properties
-                                                    echo 'sonar.host.url=http://65.2.34.111:9000' >> sonar-scanner.properties
+                                                    WORKER_IP=\$(hostname -I | awk '{print \$1}')
+                                                    echo "sonar.host.url=http://\$WORKER_IP:9000" >> sonar-scanner.properties
                                                     echo 'sonar.login=${SONAR_TOKEN}' >> sonar-scanner.properties
                                                     sonar-scanner -Dsonar.projectKey=${svc} -Dsonar.login=${SONAR_TOKEN} -Dproject.settings=sonar-scanner.properties
                                                 """
@@ -168,8 +169,8 @@ pipeline {
                                     git config --global --add safe.directory /opt/three-tier-architecture-demo-instana
                                     git pull https://github.com/Thoshinny-cyber/three-tier-architecture-demo-instana.git
                                     cd EKS/helm
-                                    helm install robot-shop --namespace testing .
-                                    kubectl apply -f ingress.yaml
+                                    helm --upgarde install robot-shop --namespace testing .
+                                    kubectl apply -f ingress-testing.yaml
                                 """,
                                 execTimeout: 2000000,
                                 removePrefix: '',
@@ -257,8 +258,8 @@ pipeline {
                                 execCommand: """
                                     cd /opt/three-tier-architecture-demo-instana
                                     cd EKS/helm
-                                    helm install robot-shop --namespace uat .
-                                    kubectl apply -f ingress.yaml --namespace=uat
+                                    helm --upgrade install robot-shop --namespace uat .
+                                    kubectl apply -f ingress-uat.yaml 
                                 """,
                                 execTimeout: 2000000,
                                 removePrefix: '',
