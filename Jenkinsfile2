@@ -27,6 +27,33 @@ pipeline {
             }
         }
 
+
+
+        stage('Fetch Values') {
+            steps {
+                script {
+                    // Execute the script to fetch values via SSH
+                    def fetchScript = sh(script: './fetch_values.sh', returnStdout: true).trim()
+
+                    // Parse the output to get SONAR_NAME and NEW_SERVER_URL
+                    def values = fetchScript.split('\n').collectEntries {
+                        def (key, value) = it.split('=')
+                        [(key): value]
+                    }
+
+                    def SONAR_NAME = values.SONAR_NAME.trim()
+                    def NEW_SERVER_URL = values.NEW_SERVER_URL.trim()
+
+                    echo "Fetched SONAR_NAME: $SONAR_NAME"
+                    echo "Fetched NEW_SERVER_URL: $NEW_SERVER_URL"
+                    
+                    // Update SonarQube server URL using Jenkins Script Console
+                    updateSonarQubeUrl(SONAR_NAME, NEW_SERVER_URL)
+                }
+            } 
+
+
+
         stage('SAST') {
             steps {
                 script {
@@ -187,5 +214,24 @@ pipeline {
     def getVersion() {
         def commitHash = sh label: '', returnStdout: true, script: 'git rev-parse --short HEAD'
         return commitHash
+    }
+
+
+
+
+    // Function to update SonarQube server URL using Jenkins Script Console
+    def updateSonarQubeUrl(sonarName, newServerUrl) {
+        def script = """
+            import jenkins.model.Jenkins
+            import hudson.plugins.sonar.SonarGlobalConfiguration
+            
+            def sonarConfig = Jenkins.getInstance().getDescriptorByType(SonarGlobalConfiguration.class)
+            sonarConfig.setInstallations([new SonarGlobalConfiguration.Installation("${sonarName}", "${newServerUrl}")])
+            sonarConfig.save()
+        """
+        
+        // Execute the script
+        def result = script.sandbox().evaluate()
+        echo "SonarQube server URL updated successfully to: ${newServerUrl}"
     }
 
