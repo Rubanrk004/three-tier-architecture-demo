@@ -128,7 +128,6 @@ pipeline {
                                                 tar -xf Bundle.tar.gz ${svc}; 
                                                 cd ${svc};
                                                 docker build . -t securityanddevops/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG}
-                                                // --cache-from securityanddevops/rs-${svc}:latest
                                                 trivy image --severity CRITICAL --exit-code 1 securityanddevops/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG}
                                                 docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
                                                 docker tag securityanddevops/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG} securityanddevops/rs-${svc}:latest
