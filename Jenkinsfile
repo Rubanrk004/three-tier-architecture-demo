@@ -22,11 +22,11 @@ pipeline {
     stages {
         stage('SCM') {
             steps {
-                 script{
-                    echo "${DOCKER_TAG} SAMPLEWORDING "    
-                    }
-                // deleteDir()
-                // git 'https://github.com/Ameerbatcha/three-tier-architecture-demo.git'
+                 // script{
+                 //    echo "${DOCKER_TAG} SAMPLEWORDING "    
+                 //    }
+                deleteDir()
+                git 'https://github.com/Ameerbatcha/three-tier-architecture-demo.git'
             }
         }
 
