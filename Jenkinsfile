@@ -1,18 +1,18 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'maven'
-        nodejs 'nodejs'
-    }
+    // tools {
+    //     maven 'maven'
+    //     nodejs 'nodejs'
+    // }
 
-    parameters {
-        choice(
-            name: 'SERVICE_NAME',
-            choices: ['catalogue', 'user', 'cart', 'shipping', 'ratings', 'payment', 'dispatch', 'mongo', 'mysql', 'web', 'ALL'],
-            description: 'Select the service to deploy'
-        )
-    }
+    // parameters {
+    //     choice(
+    //         name: 'SERVICE_NAME',
+    //         choices: ['catalogue', 'user', 'cart', 'shipping', 'ratings', 'payment', 'dispatch', 'mongo', 'mysql', 'web', 'ALL'],
+    //         description: 'Select the service to deploy'
+    //     )
+    // }
 
     environment {
         DOCKER_TAG = getVersion()
@@ -22,8 +22,11 @@ pipeline {
     stages {
         stage('SCM') {
             steps {
-                deleteDir()
-                git 'https://github.com/Ameerbatcha/three-tier-architecture-demo.git'
+                 script{
+                    echo "${DOCKER_TAG} SAMPLEWORDING "    
+                    }
+                // deleteDir()
+                // git 'https://github.com/Ameerbatcha/three-tier-architecture-demo.git'
             }
         }
 
@@ -97,65 +100,65 @@ pipeline {
         //     }
         // }
 
-        stage('Bundling') {
-            steps {
-                sh 'tar czf Bundle.tar.gz *'
-            }
-        }
+        // stage('Bundling') {
+        //     steps {
+        //         sh 'tar czf Bundle.tar.gz *'
+        //     }
+        // }
 
-        stage('Build and push Image') {
-            steps {
-                script {
-                    sh "echo ${DOCKER_TAG}"
-                    withCredentials([usernamePassword(credentialsId: 'docker_hub_DSO', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        def services = []
-                        if (params.SERVICE_NAME == 'ALL') {
-                            services = ['cart', 'catalogue', 'dispatch', 'mongo', 'mysql', 'payment', 'user', 'shipping', 'ratings', 'web']
-                        } else {
-                            services = [params.SERVICE_NAME]
-                        }
+        // stage('Build and push Image') {
+        //     steps {
+        //         script {
+        //             sh "echo ${DOCKER_TAG}"
+        //             withCredentials([usernamePassword(credentialsId: 'docker_hub_DSO', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+        //                 def services = []
+        //                 if (params.SERVICE_NAME == 'ALL') {
+        //                     services = ['cart', 'catalogue', 'dispatch', 'mongo', 'mysql', 'payment', 'user', 'shipping', 'ratings', 'web']
+        //                 } else {
+        //                     services = [params.SERVICE_NAME]
+        //                 }
 
-                        for (String svc : services) {
-                            sshPublisher(publishers: [
-                                sshPublisherDesc(
-                                    configName: 'worker1',
-                                    transfers: [
-                                        sshTransfer(
-                                            cleanRemote: false,
-                                            excludes: '',
-                                            execCommand: """
-                                                cd /opt/docker;
-                                                tar -xf Bundle.tar.gz ${svc};
-                                                cd ${svc};
-                                                docker build . -t securityanddevops/rs-${svc}:${DOCKER_TAG}
-                                                trivy image --severity CRITICAL --exit-code 1 securityanddevops/rs-${svc}:${DOCKER_TAG}
-                                                docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
-                                                docker tag securityanddevops/rs-${svc}:${DOCKER_TAG} securityanddevops/rs-${svc}:latest
-                                                docker push securityanddevops/rs-${svc}:${DOCKER_TAG}
-                                                docker push securityanddevops/rs-${svc}:latest
-                                                docker rmi securityanddevops/rs-${svc}:${DOCKER_TAG}
-                                            """,
-                                            execTimeout: 2000000,
-                                            flatten: false,
-                                            makeEmptyDirs: false,
-                                            noDefaultExcludes: false,
-                                            patternSeparator: '[, ]+$',
-                                            remoteDirectory: '//opt//docker',
-                                            remoteDirectorySDF: false,
-                                            removePrefix: '',
-                                            sourceFiles: '*.gz'
-                                        )
-                                    ],
-                                    usePromotionTimestamp: false,
-                                    useWorkspaceInPromotion: false,
-                                    verbose: true
-                                )
-                            ])
-                        }
-                    }
-                }
-            }
-        }
+        //                 for (String svc : services) {
+        //                     sshPublisher(publishers: [
+        //                         sshPublisherDesc(
+        //                             configName: 'worker1',
+        //                             transfers: [
+        //                                 sshTransfer(
+        //                                     cleanRemote: false,
+        //                                     excludes: '',
+        //                                     execCommand: """
+        //                                         cd /opt/docker;
+        //                                         tar -xf Bundle.tar.gz ${svc};
+        //                                         cd ${svc};
+        //                                         docker build . -t securityanddevops/rs-${svc}:${DOCKER_TAG}
+        //                                         trivy image --severity CRITICAL --exit-code 1 securityanddevops/rs-${svc}:${DOCKER_TAG}
+        //                                         docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+        //                                         docker tag securityanddevops/rs-${svc}:${DOCKER_TAG} securityanddevops/rs-${svc}:latest
+        //                                         docker push securityanddevops/rs-${svc}:${DOCKER_TAG}
+        //                                         docker push securityanddevops/rs-${svc}:latest
+        //                                         docker rmi securityanddevops/rs-${svc}:${DOCKER_TAG}
+        //                                     """,
+        //                                     execTimeout: 2000000,
+        //                                     flatten: false,
+        //                                     makeEmptyDirs: false,
+        //                                     noDefaultExcludes: false,
+        //                                     patternSeparator: '[, ]+$',
+        //                                     remoteDirectory: '//opt//docker',
+        //                                     remoteDirectorySDF: false,
+        //                                     removePrefix: '',
+        //                                     sourceFiles: '*.gz'
+        //                                 )
+        //                             ],
+        //                             usePromotionTimestamp: false,
+        //                             useWorkspaceInPromotion: false,
+        //                             verbose: true
+        //                         )
+        //                     ])
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
     // stage('Deploy to Testing Namespace') {
     //         steps {
     //             sshPublisher(publishers: [
