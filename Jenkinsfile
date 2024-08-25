@@ -188,76 +188,76 @@ pipeline {
                 ])
             }
         }
-                stage('Wait for Pods to be Ready') {
-    steps {
-        sshPublisher(publishers: [
-            sshPublisherDesc(
-                configName: 'Bootstrap_Server',
-                transfers: [
-                    sshTransfer(
-                        execCommand: """
-                            timeout=180
-                            interval=30
-                            elapsed=0
-                            while [[ \$elapsed -lt \$timeout ]]; do
-                                total_pods=\$(kubectl get pods -n testing --no-headers | wc -l)
-                                running_pods=\$(kubectl get pods -n testing --field-selector=status.phase=Running --no-headers | wc -l)
-                                if [[ "\$total_pods" -eq "\$running_pods" && "\$total_pods" -ne 0 ]]; then
-                                    echo "All pods are ready"
-                                    exit 0
-                                fi
-                                sleep \$interval
-                                elapsed=\$((elapsed + interval))
-                            done
-                            echo "Pods did not become ready in time"
-                            exit 1
-                        """,
-                        execTimeout: 2000000,
-                        removePrefix: '',
-                        remoteDirectory: '',
-                        sourceFiles: ''
+//                 stage('Wait for Pods to be Ready') {
+//     steps {
+//         sshPublisher(publishers: [
+//             sshPublisherDesc(
+//                 configName: 'Bootstrap_Server',
+//                 transfers: [
+//                     sshTransfer(
+//                         execCommand: """
+//                             timeout=180
+//                             interval=30
+//                             elapsed=0
+//                             while [[ \$elapsed -lt \$timeout ]]; do
+//                                 total_pods=\$(kubectl get pods -n testing --no-headers | wc -l)
+//                                 running_pods=\$(kubectl get pods -n testing --field-selector=status.phase=Running --no-headers | wc -l)
+//                                 if [[ "\$total_pods" -eq "\$running_pods" && "\$total_pods" -ne 0 ]]; then
+//                                     echo "All pods are ready"
+//                                     exit 0
+//                                 fi
+//                                 sleep \$interval
+//                                 elapsed=\$((elapsed + interval))
+//                             done
+//                             echo "Pods did not become ready in time"
+//                             exit 1
+//                         """,
+//                         execTimeout: 2000000,
+//                         removePrefix: '',
+//                         remoteDirectory: '',
+//                         sourceFiles: ''
+//                     )
+//                 ],
+//                 usePromotionTimestamp: false,
+//                 verbose: true
+//             )
+//         ])
+//     }
+// }
+         stage('Wait for Pods to be Ready') {
+            steps {
+                sshPublisher(publishers: [
+                    sshPublisherDesc(
+                        configName: 'Bootstrap_Server',
+                        transfers: [
+                            sshTransfer(
+                                execCommand: """
+                                    timeout=180
+                                    interval=30
+                                    elapsed=0
+                                    while [[ \$elapsed -lt \$timeout ]]; do
+                                        if kubectl get pods -n testing --field-selector=status.phase=Running | grep -q 'Running'; then
+                                            echo "Pods are ready"
+                                            exit 0
+                                        fi
+                                        sleep \$interval
+                                        elapsed=\$((elapsed + interval))
+                                    done
+                                    echo "Pods did not become ready in time"
+                                    exit 1
+                                """,
+                                execTimeout: 2000000,
+                                removePrefix: '',
+                                remoteDirectory: '',
+                                sourceFiles: ''
+                            )
+                        ],
+                        usePromotionTimestamp: false,
+                        verbose: true
                     )
-                ],
-                usePromotionTimestamp: false,
-                verbose: true
-            )
-        ])
-    }
-}
-        //  stage('Wait for Pods to be Ready') {
-        //     steps {
-        //         sshPublisher(publishers: [
-        //             sshPublisherDesc(
-        //                 configName: 'Bootstrap_Server',
-        //                 transfers: [
-        //                     sshTransfer(
-        //                         execCommand: """
-        //                             timeout=180
-        //                             interval=30
-        //                             elapsed=0
-        //                             while [[ \$elapsed -lt \$timeout ]]; do
-        //                                 if kubectl get pods -n testing --field-selector=status.phase=Running | grep -q 'Running'; then
-        //                                     echo "Pods are ready"
-        //                                     exit 0
-        //                                 fi
-        //                                 sleep \$interval
-        //                                 elapsed=\$((elapsed + interval))
-        //                             done
-        //                             echo "Pods did not become ready in time"
-        //                             exit 1
-        //                         """,
-        //                         execTimeout: 2000000,
-        //                         removePrefix: '',
-        //                         remoteDirectory: '',
-        //                         sourceFiles: ''
-        //                     )
-        //                 ],
-        //                 usePromotionTimestamp: false,
-        //                 verbose: true
-        //             )
-        //         ])
-        //     }
-        // }
+                ])
+            }
+        }
 
         stage('Run Automation Tests') {
             steps {
