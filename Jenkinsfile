@@ -163,7 +163,7 @@ pipeline {
             steps {
                 sshPublisher(publishers: [
                     sshPublisherDesc(
-                        configName: 'Bootstrap_Server',
+                        configName: 'worker1',
                         transfers: [
                             sshTransfer(
                                 execCommand: """
@@ -192,7 +192,7 @@ pipeline {
     steps {
         sshPublisher(publishers: [
             sshPublisherDesc(
-                configName: 'Bootstrap_Server',
+                configName: 'worker1',
                 transfers: [
                     sshTransfer(
                         execCommand: """
@@ -292,7 +292,7 @@ pipeline {
             steps {
                 sshPublisher(publishers: [
                     sshPublisherDesc(
-                        configName: 'Bootstrap_Server',
+                        configName: 'worker1',
                         transfers: [
                             sshTransfer(
                                 execCommand: """
