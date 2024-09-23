@@ -26,7 +26,7 @@ pipeline {
                  //    echo "${DOCKER_TAG} SAMPLEWORDING "    
                  //    }
                 deleteDir()
-                git 'https://github.com/Ameerbatcha/three-tier-architecture-demo.git'
+                git 'https://github.com/Rubanrk004/three-tier-architecture-demo.git'
             }
         }
 
@@ -65,7 +65,7 @@ pipeline {
                                                     echo 'sonar.projectKey=${svc}' > sonar-scanner.properties
                                                     echo 'sonar.sources=.' >> sonar-scanner.properties
                                                     WORKER_IP=\$(hostname -I | awk '{print \$1}')
-                                                    echo "sonar.host.url=http://65.2.182.153:9000" >> sonar-scanner.properties
+                                                    echo "sonar.host.url=http://13.201.33.31:9000" >> sonar-scanner.properties
                                                     echo 'sonar.login=${SONAR_TOKEN}' >> sonar-scanner.properties
                                                     sonar-scanner -Dsonar.projectKey=${svc} -Dsonar.login=${SONAR_TOKEN} -Dproject.settings=sonar-scanner.properties
                                                 """
