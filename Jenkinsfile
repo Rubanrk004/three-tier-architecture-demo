@@ -167,10 +167,10 @@ pipeline {
                         transfers: [
                             sshTransfer(
                                 execCommand: """
-                                    cd /opt/three-tier-architecture-demo-instana
-                                    git config --global --add safe.directory /opt/three-tier-architecture-demo-instana
+                                    cd /opt/three-tier-architecture-CD
+                                    git config --global --add safe.directory /opt/three-tier-architecture-CD
                                     git stash
-                                    git pull -f https://github.com/Thoshinny-cyber/three-tier-architecture-demo-instana.git
+                                    git pull -f https://github.com/Rubanrk004/three-tier-architecture-CD.git
                                     cd EKS/helm
                                     helm upgrade --install robot-shop --namespace testing .
                                     kubectl apply -f ingress-testing.yaml
@@ -296,7 +296,7 @@ pipeline {
                         transfers: [
                             sshTransfer(
                                 execCommand: """
-                                    cd /opt/three-tier-architecture-demo-instana
+                                    cd /opt/three-tier-architecture-CD
                                     cd EKS/helm
                                     helm upgrade --install robot-shop --namespace uat .
                                     kubectl apply -f ingress-uat.yaml
