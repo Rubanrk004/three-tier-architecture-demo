@@ -26,7 +26,7 @@ pipeline {
                  //    echo "${DOCKER_TAG} SAMPLEWORDING "    
                  //    }
                 deleteDir()
-                git 'https://github.com/Ameerbatcha/three-tier-architecture-demo.git'
+                git 'https://github.com/Rubanrk004/three-tier-architecture-demo.git'
             }
         }
 
@@ -130,13 +130,13 @@ pipeline {
                                                 cd /opt/docker;
                                                 tar -xf Bundle.tar.gz ${svc};
                                                 cd ${svc};
-                                                docker build . -t securityanddevops/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG}
-                                                trivy image --severity CRITICAL --exit-code 1 securityanddevops/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG}
+                                                docker build . -t rk0904/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG}
+                                                trivy image --severity CRITICAL --exit-code 1 rk0904/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG}
                                                 docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
-                                                docker tag securityanddevops/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG} securityanddevops/rs-${svc}:latest
-                                                docker push securityanddevops/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG}
-                                                docker push securityanddevops/rs-${svc}:latest
-                                                docker rmi securityanddevops/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG}
+                                                docker tag rk0904/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG} rk0904/rs-${svc}:latest
+                                                docker push rk0904/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG}
+                                                docker push rk0904/rs-${svc}:latest
+                                                docker rmi rk0904/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG}
                                             """,
                                             execTimeout: 2000000,
                                             flatten: false,
@@ -168,9 +168,9 @@ pipeline {
                             sshTransfer(
                                 execCommand: """
                                     cd /opt/three-tier-architecture-demo-instana
-                                    git config --global --add safe.directory /opt/three-tier-architecture-demo-instana
+                                    git config --global --add safe.directory /opt/three-tier-architecture-CD
                                     git stash
-                                    git pull -f https://github.com/Thoshinny-cyber/three-tier-architecture-demo-instana.git
+                                    git pull -f https://github.com/Rubanrk004/three-tier-architecture-CD.git
                                     cd EKS/helm
                                     helm upgrade --install robot-shop --namespace testing .
                                     kubectl apply -f ingress-testing.yaml
@@ -296,7 +296,7 @@ pipeline {
                         transfers: [
                             sshTransfer(
                                 execCommand: """
-                                    cd /opt/three-tier-architecture-demo-instana
+                                    cd /opt/three-tier-architecture-CD
                                     cd EKS/helm
                                     helm upgrade --install robot-shop --namespace uat .
                                     kubectl apply -f ingress-uat.yaml
