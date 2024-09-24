@@ -65,7 +65,7 @@ pipeline {
                                                     echo 'sonar.projectKey=${svc}' > sonar-scanner.properties
                                                     echo 'sonar.sources=.' >> sonar-scanner.properties
                                                     WORKER_IP=\$(hostname -I | awk '{print \$1}')
-                                                    echo "sonar.host.url=http://13.201.33.31:9000" >> sonar-scanner.properties
+                                                    echo "sonar.host.url=http://${WORKER_IP}:9000" >> sonar-scanner.properties
                                                     echo 'sonar.login=${SONAR_TOKEN}' >> sonar-scanner.properties
                                                     sonar-scanner -Dsonar.projectKey=${svc} -Dsonar.login=${SONAR_TOKEN} -Dproject.settings=sonar-scanner.properties
                                                 """
