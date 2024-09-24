@@ -135,7 +135,7 @@ pipeline {
                                                 docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
                                                 docker tag rk0904/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG} rk0904/rs-${svc}:latest
                                                 docker push rk0904/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG}
-                                                docker push srk0904/rs-${svc}:latest
+                                                docker push rk0904/rs-${svc}:latest
                                                 docker rmi rk0904/rs-${svc}:${BUILD_NUMBER}-${DOCKER_TAG}
                                             """,
                                             execTimeout: 2000000,
